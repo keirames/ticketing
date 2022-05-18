@@ -19,11 +19,11 @@ spec:
           env:
             - name: DATABASE_URL
               value: postgresql://postgres:12345678@tickets-postgres-srv:5432/tickets-srv?schema=public
-          #   - name: JWT_SECRET_KEY
-          #     valueFrom:
-          #       secretKeyRef:
-          #         name: jwt-secret
-          #         key: JWT_SECRET_KEY
+            - name: JWT_SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: jwt-secret
+                  key: JWT_SECRET_KEY
           resources:
             limits:
               memory: "512Mi"
