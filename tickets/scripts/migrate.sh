@@ -5,6 +5,6 @@ until [ "$n" -ge 50 ]
 do
    npx prisma migrate dev && break
    n=$((n+1))
-   echo "Wating..."
+   echo "Waiting..."
    sleep 5
 done
