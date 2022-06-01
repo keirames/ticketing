@@ -1,25 +1,52 @@
-import { NestExpressApplication } from '@nestjs/platform-express';
+import { MongoMemoryServer } from 'mongodb-memory-server';
+import mongoose from 'mongoose';
 import request from 'supertest';
+import { app } from '../app';
 
 declare global {
-  var getAuthCookies: (app: NestExpressApplication) => Promise<string[]>;
+  var signin: () => Promise<string[]>;
 }
 
-// NOTE: this function is only be able to use in testing environment
-// we're declare it in setupFilesAfterEnv file jest setting.
-global.getAuthCookies = async (
-  app: NestExpressApplication,
-): Promise<string[]> => {
-  const name = 'name';
-  const email = 'test@gmail.com';
-  const password = '123456789';
+let mongo: any;
+beforeAll(async () => {
+  process.env.JWT_KEY = 'asdfasdf';
+  process.env.NODE_TLS_REJECT_UNAUTHORIZED = '0';
 
-  const res = await request(app.getHttpServer())
-    .post('/api/v1/users/sign-up')
-    .send({ name, email, password })
+  mongo = new MongoMemoryServer();
+  const mongoUri = await mongo.getUri();
+
+  await mongoose.connect(mongoUri, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true,
+  });
+});
+
+beforeEach(async () => {
+  const collections = await mongoose.connection.db.collections();
+
+  for (let collection of collections) {
+    await collection.deleteMany({});
+  }
+});
+
+afterAll(async () => {
+  await mongo.stop();
+  await mongoose.connection.close();
+});
+
+global.signin = async () => {
+  const email = 'test@test.com';
+  const password = 'password';
+
+  const response = await request(app)
+    .post('/api/users/signup')
+    .send({
+      email,
+      password,
+    })
     .expect(201);
 
-  const cookies = res.get('Set-Cookie');
+  const cookie = response.get('Set-Cookie');
 
-  return cookies;
+  return cookie;
 };
